@@ -1,0 +1,18 @@
+{
+  "name": "go-pax-api-example",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "repository": "https://github.com/ksmin/go-pax-api-example",
+  "author": "SangMin, Kang <ksmini82@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "parcel src/index.html",
+    "build": "parcel build src/index.html"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.5.5",
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "parcel-bundler": "^1.12.3"
+  }
+}

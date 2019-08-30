@@ -1,10 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <title>GoPAX API example</title>
 </head>
+
 <body>
+    <div class="container">
+        <div id="asset-filter-box" class="filter-box">
+            <div class="filter">
+                <div class="filter-item">
+                    <div class="Star">⭑</div>
+                    <span class="starText">관심</span>
+                </div>
+                <div class="filter-item">KRW</div>
+                <div class="filter-item">BTC</div>
+                <div class="filter-item">ETH</div>
+            </div>
+            <div class="keyword-filter">
+                <input class="input" type="text" placeholder="이름/심볼 검색" value="" />
+            </div>
+        </div>
+        <table id="asset-list">
+            <thead>
+                <tr>
+                    <th class="favorite"></th>
+                    <th class="coinName align-left" data-sort-field="label">이름</th>
+                    <th class="lastPrice align-right" data-sort-field="close">현재가</th>
+                    <th class="contrast align-right" data-sort-field="ratio">변동</th>
+                    <th class="align-right" data-sort-field="high">최고가</th>
+                    <th class="align-right" data-sort-field="low">최저가</th>
+                    <th class="align-right" data-sort-field="tradingVolume">거래대금</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
     <script src="js/index.js"></script>
 </body>
+
 </html>

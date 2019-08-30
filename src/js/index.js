@@ -1,43 +1,118 @@
 "use strinct";
 
-import sha512 from "./sha512hmac";
-import { generateSignature } from "./gopax";
+import {GoPaxApiHandler, genAssetTemplate} from './gopax';
+import "../style/index.scss";
+import "../style/table.scss";
 
 
-const apiKey = '';  // 발급받은 API 키
-const secretKey = '';
-const nonce = Date.now() * 1000; // 중복되지 않고 계속 증가하는 값 (통상적으로 timestamp)
-const method = 'GET';
-const endPointPath = '/assets';
-const payload = null;
+let filterAsset = "KRW";
+let filterKeyword = '';
+let assetNameMap = {};
+let assetList = [];
+let sortField = 'tradingVolume';
 
-const signature = generateSignature(nonce, method, endPointPath, payload);
-console.debug('[*] Signature:', signature);
-const decodedSecretKey = atob(secretKey); // Decode in base64
-console.debug('[*] decodedSecretKey:', decodedSecretKey);
-const hmacAuth = sha512.hmac(decodedSecretKey, 'Message to hash');
-console.debug('[*] hmacAuth:', hmacAuth);
-const hmacAuthBase64 = btoa(hmacAuth);
-console.debug('[*] hmacAuthBase64:', hmacAuthBase64);
+const fetchAssetList = async () => {
+    const apiHandler = new GoPaxApiHandler(true);
 
-const apiUrl = 'https://api.gopax.co.kr';
-const headers = {
-  'API-KEY': apiKey,
-  'SIGNATURE': signature,
-  'NONCE': nonce,
+    try {
+        const assetTableBody = document.querySelector("#asset-list > tbody");;
+        const stats = await apiHandler.fetch('GET', '/trading-pairs/stats');
+        // console.debug('[+] stats:', stats);
+        assetList = stats
+            .map((stat) => {
+                const coins = stat.name.split('-');
+                return {
+                    ...stat,
+                    label: assetNameMap[coins[0]],
+                    fromCoin: coins[0],
+                    toCoin: coins[1],
+                    ratio: ((stat.open - stat.close) / stat.open * 100).toFixed(2),
+                    tradingVolume: (stat.close * stat.volume).toFixed(0),
+                };
+            });
+    } catch (err) {
+        console.debug('[-] error:', err);
+    }
+
+    refreshTable();
+    resetRefreshTimer();
 };
-const reqOpt = {
-  method: method,
-  headers: headers,
-  json: true,
-  mode: 'no-cors',
-  // cache: 'default'
+
+const refreshTable = async () => {
+    const filteredAssets = assetList.filter(stat => (stat.label.includes(filterKeyword) || stat.name.includes(filterKeyword)) && stat.toCoin === filterAsset)
+        .sort((st1, st2) => st2[sortField] - st1[sortField]);
+    // console.debug('[+] filteredAssets:', filteredAssets);
+    const assetTemplates = filteredAssets
+        .map((stat) => genAssetTemplate(stat))
+        .join('');
+    
+    const assetTableBody = document.querySelector("#asset-list > tbody");
+    assetTableBody.innerHTML = "";
+    assetTableBody.insertAdjacentHTML('beforeend', assetTemplates);
 };
 
-fetch(apiUrl, reqOpt)
-  .then(resp => {
-    console.log('[+] response:', resp);
-  })
-  .catch(err => {
-    console.log('[-] error:', err);
-  });
+const fetchAssetMap = async () => {
+    const apiHandler = new GoPaxApiHandler(true);
+
+    try {
+        const assetList = await apiHandler.fetch('GET', '/assets');
+        assetNameMap = assetList.reduce((nameMap, asset) => 
+            (nameMap[asset.id] = asset.name, nameMap)
+        , {});
+        return assetNameMap;
+    } catch (err) {
+        console.debug('[-] error:', err);
+    }
+};
+
+const registEventListeners = () => {
+    const filter = document.querySelector('#asset-filter-box > .filter');
+    filter.addEventListener("click", (evt) => {
+        if ("filter-item" !== evt.target.className) {
+            return ;
+        }
+        filterAsset = evt.target.textContent;
+        refreshTable();
+    });
+
+    const filterInput = document.querySelector('#asset-filter-box > .keyword-filter > input');
+    filterInput.addEventListener("keypress", (evt) => {
+        if ("Enter" !== evt.key) {
+            return ;
+        }
+        filterKeyword = evt.target.value;
+        refreshTable();
+    });
+
+    const tableHead = document.querySelector('#asset-list > thead > tr');
+    tableHead.addEventListener("click", (evt) => {
+        const sortFieldName = evt.target.getAttribute('data-sort-field');
+        if (!sortFieldName) {
+            return ;
+        }
+        sortField = sortFieldName;
+        refreshTable();
+    });
+};
+
+let refreshTimer = null;
+const resetRefreshTimer = () => {
+    if (!!refreshTimer) {
+        clearInterval(refreshTimer);
+        refreshTimer = null;
+    }
+
+    refreshTimer = setInterval(() => {
+        fetchAssetList();
+    }, 5 * 60 * 1000);  // 5분 주기로 리프레쉬
+};
+
+const main = async () => {
+    const body = null;
+    
+    registEventListeners();
+    fetchAssetMap();
+    fetchAssetList();
+}
+
+main();

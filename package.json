@@ -7,12 +7,19 @@
   "license": "MIT",
   "scripts": {
     "start": "parcel src/index.html",
-    "build": "parcel build src/index.html"
+    "build": "parcel build src/index.html --public-url=./"
   },
   "devDependencies": {
-    "@babel/cli": "^7.5.5",
-    "@babel/core": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
-    "parcel-bundler": "^1.12.3"
+    "parcel-bundler": "^1.12.3",
+    "sass": "^1.22.10"
+  },
+  "browserslist": [
+    "Chrome 56",
+    "Firefox 53",
+    "Safari 10.1",
+    "Node 7.6.0"
+  ],
+  "browser": {
+    "process": false
   }
 }
